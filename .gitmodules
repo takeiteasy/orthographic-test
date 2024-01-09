@@ -1,0 +1,6 @@
+[submodule "deps/cwcGL"]
+	path = deps/cwcGL
+	url = git@github.com:takeiteasy/cwcGL.git
+[submodule "deps/ez"]
+	path = deps/ez
+	url = git@github.com:takeiteasy/ez.git

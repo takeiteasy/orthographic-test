@@ -1,0 +1,33 @@
+name: tbce
+
+options:
+  bundleIdPrefix: io.github.takeiteasy
+  createIntermediateGroups: true
+  deploymentTarget:
+    macOS: "12.0"
+
+settings:
+  GCC_C_LANGUAGE_STANDARD: c11
+
+targets:
+  tbce:
+    type: tool
+    platform: macOS
+    sources:
+        - path: assets/
+          type: folder
+        - path: deps/
+          type: folder
+        - path: build/
+          type: folder
+        - path: src/
+        - path: deps/cwcGL/src/cwcgl.c
+        - path: Makefile
+        - path: project.yml
+        - path: README.md
+    dependencies:
+        - sdk: /opt/homebrew/lib/libglfw.dylib
+    settings:
+        HEADER_SEARCH_PATHS: [/opt/homebrew/include, $(PROJECT_DIR)/deps, $(PROJECT_DIR)/deps/ez, $(PROJECT_DIR)/deps/cwcGL/src]
+        LIBRARY_SEARCH_PATHS: [/opt/homebrew/lib]
+        OTHER_CFLAGS: [-DCWCGL_VERSION=3000, -DGL_SILENCE_DEPRECATION, -fenable-matrix]
