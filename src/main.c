@@ -28,13 +28,7 @@
 #include "common.h"
 #include "map.h"
 #include "debug.h"
-#define FAST_OBJ_IMPLEMENTATION
-#include "fast_obj.h"
-
-typedef struct {
-    float *vertices;
-    int sizeOfVertices;
-} Mesh;
+#include "model.h"
 
 static struct {
     GLFWwindow *mainWindow;
@@ -51,89 +45,8 @@ static struct {
     double deltaTime;
     Vec2f scrollDelta;
     
-    Mesh testMesh;
-    Texture testTexture;
+    Model suzanne;
 } state;
-
-static void LoadMesh(Mesh *mesh, const char *path) {
-    fastObjMesh* obj = fast_obj_read(path);
-    assert(obj);
-    
-    mesh->sizeOfVertices = obj->face_count * 3;
-    mesh->vertices = malloc(obj->face_count * 3 * 8 * sizeof(float));
-    for (int i = 0; i < mesh->sizeOfVertices; i++) {
-        fastObjIndex vertex = obj->indices[i];
-        unsigned int pos = i * 8;
-        unsigned int v_pos = vertex.p * 3;
-        unsigned int n_pos = vertex.n * 3;
-        unsigned int t_pos = vertex.t * 2;
-        memcpy(mesh->vertices + pos, obj->positions + v_pos, 3 * sizeof(float));
-        memcpy(mesh->vertices + pos + 3, obj->normals + n_pos, 3 * sizeof(float));
-        memcpy(mesh->vertices + pos + 6, obj->texcoords + t_pos, 2 * sizeof(float));
-    }
-}
-
-void MulMatrix(Matrix mat) {
-   float buffer[16];
-    for (int row = 0; row < 4; ++row)
-        for (int col = 0; col < 4; ++col)
-           buffer[col * 4 + row] = mat[row][col];
-   glMultMatrixf(buffer);
-}
-
-static void RenderMesh(Mesh *mesh, Texture *texture) {
-    if (texture) {
-        glEnable(GL_TEXTURE_2D);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glBindTexture(GL_TEXTURE_2D, texture->id);
-    } else
-        glDisable(GL_TEXTURE_2D);
-    
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-    
-    Vec3f scale = Vec3New(.002f, .002f, .002f);
-    glScalef(scale.x * state.camera.zoom, scale.y * state.camera.zoom, scale.z * state.camera.zoom);
-    
-    Vec2f rotation = Vec2New(45.f, 0.f);
-    Vec2f adjustment = Vec2New(REMAP(-state.camera.pitch, PI + HALF_PI, TWO_PI, 0.f, 360.f / 8.f),
-                               TO_DEGREES(state.camera.angle)) - rotation;
-    glRotatef(adjustment.x, 1.0, 0.0, 0.0); // Rotate around the x-axis
-    glRotatef(adjustment.y, 0.0, 1.0, 0.0); // Rotate around the y-axis
-    
-    Vec3f translate = state.camera.position + Vec3New(.75f, 1.f, .75f);
-    glTranslatef(translate.x, translate.y, translate.z);
- 
-    glBegin(GL_TRIANGLES);
-    size_t sz = mesh->sizeOfVertices;
-    Vec3f positions[sz], normals[sz];
-    Vec2f texcoords[sz];
-    for (int i = 0; i < mesh->sizeOfVertices; i += 3) {
-        for (int j = 0; j < 3; ++j) {
-            float *vertex = mesh->vertices + ((i + j) * 8);
-            memcpy(positions + i + j, vertex, sizeof(float) * 3);
-            memcpy(normals + i + j, vertex + 3, sizeof(float) * 3);
-            memcpy(texcoords + i + j, vertex + 6, sizeof(float) * 2);
-            Vec3f position = Vec3New(vertex[0], vertex[1], vertex[2]);
-            Vec3f normal   = Vec3New(vertex[3], vertex[4], vertex[5]);
-            Vec2f texcoord = Vec2New(vertex[6], vertex[7]);
-
-//            glTexCoord2f(texcoord.x, texcoord.y);
-            glColor4f(1.f, 0.f, 0.f, 1.f);
-//            glNormal3f(normal.x, normal.y, normal.z);
-            glVertex3f(position.x, position.y, position.z);
-        }
-    }
-    glEnd();
-    glPopMatrix();
-    
-    if (texture) {
-        glDisable(GL_TEXTURE_2D);
-        glDisable(GL_BLEND);
-    }
-}
 
 static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
@@ -143,9 +56,13 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
         state.ctrlDown = action == GLFW_PRESS;
     
     switch (key) {
-        case GLFW_KEY_KP_0: // Top down
-            state.cameraTarget.angle = PI;
+        case GLFW_KEY_KP_0:
+            state.cameraTarget.angle = TWO_PI;
             state.cameraTarget.pitch = PI + HALF_PI;
+            break;
+        case GLFW_KEY_KP_5:
+            state.cameraTarget.angle = TWO_PI;
+            state.cameraTarget.pitch = TWO_PI;
             break;
         case GLFW_KEY_KP_2:
             state.cameraTarget.angle = PI * 2.f;
@@ -172,15 +89,15 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
             state.cameraTarget.angle = PI * 1.75f;
             break;
         case GLFW_KEY_KP_SUBTRACT:
-            state.cameraTarget.zoom = CLAMP(state.cameraTarget.zoom - 10.f, .1, MAX_ZOOM);
+            state.cameraTarget.zoom = CLAMP(state.cameraTarget.zoom - 5.f, .1, MAX_ZOOM);
             break;
         case GLFW_KEY_KP_ADD:
-            state.cameraTarget.zoom = CLAMP(state.cameraTarget.zoom + 10.f, .1, MAX_ZOOM);
-            break;
-        case GLFW_KEY_KP_DIVIDE:
-            state.cameraTarget.pitch = CLAMP(state.cameraTarget.pitch - .5f / PI, PI + HALF_PI, TWO_PI);
+            state.cameraTarget.zoom = CLAMP(state.cameraTarget.zoom + 5.f, .1, MAX_ZOOM);
             break;
         case GLFW_KEY_KP_MULTIPLY:
+            state.cameraTarget.pitch = CLAMP(state.cameraTarget.pitch - .5f / PI, PI + HALF_PI, TWO_PI);
+            break;
+        case GLFW_KEY_KP_DIVIDE:
             state.cameraTarget.pitch = CLAMP(state.cameraTarget.pitch + .5f / PI, PI + HALF_PI, TWO_PI);
             break;
     }
@@ -231,8 +148,7 @@ int main(int argc, const char* argv[]) {
     state.mousePosition = state.lastMousePosition = Vec2New(mouseX, mouseY);
     state.lastTime = glfwGetTime();
     
-//    state.testTexture = LoadTexture("assets/test.png");
-    LoadMesh(&state.testMesh, "assets/suzanne.obj");
+    LoadModelObj("assets/suzanne.obj", &state.suzanne);
     
     while (!glfwWindowShouldClose(state.mainWindow)) {
         double now = glfwGetTime();
@@ -297,9 +213,7 @@ int main(int argc, const char* argv[]) {
         
         RenderMap(&state.map, windowWidth, windowHeight, &state.camera, state.cursor);
         
-        glEnable(GL_DEPTH_TEST);
-        RenderMesh(&state.testMesh, NULL);
-        glDisable(GL_DEPTH_TEST);
+        RenderModel(&state.suzanne, 0, 0, windowWidth, windowHeight, &state.camera);
         
         DebugFormat(8, 8, windowWidth, windowHeight, HEX(0xFFFF0000), "CAMERA: %f, %f\n", state.camera.position.x, state.camera.position.y);
         DebugFormat(8, 16, windowWidth, windowHeight, HEX(0xFFFF0000), "        %f, %f %f\n", state.camera.angle, state.camera.pitch, state.camera.zoom);

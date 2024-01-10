@@ -7,7 +7,6 @@
 
 #ifndef map_h
 #define map_h
-#include "ez/ezmath.h"
 #include "common.h"
 
 typedef struct {
@@ -18,15 +17,6 @@ typedef struct {
 typedef struct {
     Vec3f points[4];
 } Quad;
-
-typedef struct {
-    Vec3f position;
-    float angle;
-    float pitch;
-    float zoom;
-} Camera;
-
-#define MAX_ZOOM 256.f
 
 typedef struct {
     Vec3f points[8];

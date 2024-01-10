@@ -10,6 +10,8 @@
 #include "cwcgl.h"
 #include <GLFW/glfw3.h>
 #include "ez/ezimage.h"
+#include <assert.h>
+#include "ez/ezmath.h"
 
 #define PLATFORM_POSIX
 #if defined(macintosh) || defined(Macintosh) || (defined(__APPLE__) && defined(__MACH__))
@@ -62,6 +64,15 @@ Texture LoadTexture(const char *path);
 Texture LoadTextureFromMemory(ezImage *image);
 
 void PushColor(Color color);
+
+typedef struct {
+    Vec3f position;
+    float angle;
+    float pitch;
+    float zoom;
+} Camera;
+
+#define MAX_ZOOM 256.f
 
 #endif /* common_h */
 
