@@ -24,6 +24,6 @@ typedef struct {
 } Model;
 
 void LoadModelObj(const char *path, Model *out);
-void RenderModel(Model *model, int tx, int ty, int vw, int vh, Camera *camera);
+void RenderModel(Model *model, int tx, int ty, Camera *camera);
 
 #endif /* model_h */

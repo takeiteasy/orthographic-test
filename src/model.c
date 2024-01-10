@@ -33,7 +33,7 @@ void LoadModelObj(const char *path, Model *out) {
     }
 }
 
-static void RenderMesh(Mesh *mesh, int tx, int ty, int vw, int vh, Camera *camera) {
+static void RenderMesh(Mesh *mesh, int tx, int ty, Camera *camera) {
     if (mesh->texture) {
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_BLEND);
@@ -91,7 +91,7 @@ static void RenderMesh(Mesh *mesh, int tx, int ty, int vw, int vh, Camera *camer
     }
 }
 
-void RenderModel(Model *model, int tx, int ty, int vw, int vh, Camera *camera) {
+void RenderModel(Model *model, int tx, int ty, Camera *camera) {
     for (int i = 0; i < model->sizeOfMeshes; i++)
-        RenderMesh(&model->meshes[0], tx, ty, vw, vh, camera);
+        RenderMesh(&model->meshes[0], tx, ty, camera);
 }

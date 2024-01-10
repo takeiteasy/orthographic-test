@@ -214,7 +214,7 @@ int main(int argc, const char* argv[]) {
         
         RenderMap(&state.map, windowWidth, windowHeight, &state.camera, state.cursor);
         
-        RenderModel(&state.suzanne, 0, 0, windowWidth, windowHeight, &state.camera);
+        RenderModel(&state.suzanne, 0, 0, &state.camera);
         
         DebugFormat(8, 8, windowWidth, windowHeight, HEX(0xFFFF0000), "CAMERA: %f, %f\n", state.camera.position.x, state.camera.position.y);
         DebugFormat(8, 16, windowWidth, windowHeight, HEX(0xFFFF0000), "        %f, %f %f\n", state.camera.angle, state.camera.pitch, state.camera.zoom);
