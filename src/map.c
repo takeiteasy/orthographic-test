@@ -123,6 +123,8 @@ static Tile DefaultTile(int x, int y, int solid) {
 void InitMap(Map *map, Texture *spritesheet, int w, int h) {
     memcpy(&map->spritesheet, spritesheet, sizeof(Texture));
     map->tiles = malloc(sizeof(Tile) * w * h);
+    map->w = w;
+    map->h = h;
     for (int x = 0; x < w; x++)
         for (int y = 0; y < h; y++)
             map->tiles[y * w + x] = DefaultTile(x, y, 0);

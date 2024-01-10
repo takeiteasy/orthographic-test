@@ -40,6 +40,7 @@ typedef struct Face {
 typedef struct {
     Tile *tiles;
     Texture spritesheet;
+    int w, h;
 } Map;
 
 void InitMap(Map *map, Texture *spritesheet, int w, int h);

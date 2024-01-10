@@ -49,6 +49,20 @@ static struct {
     Model suzanne;
 } state;
 
+static void ClampCursor(int dx, int dy) {
+    Vec2i old = state.cursor;
+    Vec2i delta = (Vec2i){ dx, dy };
+    Vec2i new = old + delta;
+    state.cursor = (Vec2i) {
+        CLAMP(new.x, 0, state.map.w),
+        CLAMP(new.y, 0, state.map.h)
+    };
+    if (old.x != new.x || old.y != new.y)
+        state.cameraTarget.position = Vec3New(state.cursor.x + .5f,
+                                              state.cursor.y + .5f,
+                                              0.f);
+}
+
 static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
        glfwSetWindowShouldClose(window, GLFW_TRUE);
@@ -56,51 +70,70 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
     if (key == GLFW_KEY_LEFT_CONTROL || key == GLFW_KEY_RIGHT_CONTROL)
         state.ctrlDown = action == GLFW_PRESS;
     
-    switch (key) {
-        case GLFW_KEY_KP_0:
-            state.cameraTarget.angle = TWO_PI;
-            state.cameraTarget.pitch = PI + HALF_PI;
-            break;
-        case GLFW_KEY_KP_5:
-            state.cameraTarget.angle = TWO_PI;
-            state.cameraTarget.pitch = TWO_PI;
-            break;
-        case GLFW_KEY_KP_2:
-            state.cameraTarget.angle = PI * 2.f;
-            break;
-        case GLFW_KEY_KP_1:
-            state.cameraTarget.angle = PI * .25f;
-            break;
-        case GLFW_KEY_KP_4:
-            state.cameraTarget.angle = PI * .5f;
-            break;
-        case GLFW_KEY_KP_7:
-            state.cameraTarget.angle = PI * .75f;
-            break;
-        case GLFW_KEY_KP_8:
-            state.cameraTarget.angle = PI * 1.f;
-            break;
-        case GLFW_KEY_KP_9:
-            state.cameraTarget.angle = PI * 1.25f;
-            break;
-        case GLFW_KEY_KP_6:
-            state.cameraTarget.angle = PI * 1.5f;
-            break;
-        case GLFW_KEY_KP_3:
-            state.cameraTarget.angle = PI * 1.75f;
-            break;
-        case GLFW_KEY_KP_SUBTRACT:
-            state.cameraTarget.zoom = CLAMP(state.cameraTarget.zoom - 5.f, .1, MAX_ZOOM);
-            break;
-        case GLFW_KEY_KP_ADD:
-            state.cameraTarget.zoom = CLAMP(state.cameraTarget.zoom + 5.f, .1, MAX_ZOOM);
-            break;
-        case GLFW_KEY_KP_MULTIPLY:
-            state.cameraTarget.pitch = CLAMP(state.cameraTarget.pitch - .5f / PI, PI + HALF_PI, TWO_PI);
-            break;
-        case GLFW_KEY_KP_DIVIDE:
-            state.cameraTarget.pitch = CLAMP(state.cameraTarget.pitch + .5f / PI, PI + HALF_PI, TWO_PI);
-            break;
+    if (action == GLFW_RELEASE) {
+        switch (key) {
+            case GLFW_KEY_KP_0:
+                state.cameraTarget.angle = TWO_PI;
+                state.cameraTarget.pitch = PI + HALF_PI;
+                break;
+            case GLFW_KEY_KP_5:
+                state.cameraTarget.angle = TWO_PI;
+                state.cameraTarget.pitch = TWO_PI;
+                break;
+            case GLFW_KEY_KP_2:
+                state.cameraTarget.angle = PI * 2.f;
+                break;
+            case GLFW_KEY_KP_1:
+                state.cameraTarget.angle = PI * .25f;
+                break;
+            case GLFW_KEY_KP_4:
+                state.cameraTarget.angle = PI * .5f;
+                break;
+            case GLFW_KEY_KP_7:
+                state.cameraTarget.angle = PI * .75f;
+                break;
+            case GLFW_KEY_KP_8:
+                state.cameraTarget.angle = PI * 1.f;
+                break;
+            case GLFW_KEY_KP_9:
+                state.cameraTarget.angle = PI * 1.25f;
+                break;
+            case GLFW_KEY_KP_6:
+                state.cameraTarget.angle = PI * 1.5f;
+                break;
+            case GLFW_KEY_KP_3:
+                state.cameraTarget.angle = PI * 1.75f;
+                break;
+            case GLFW_KEY_KP_SUBTRACT:
+                state.cameraTarget.zoom = CLAMP(state.cameraTarget.zoom - 5.f, .1, MAX_ZOOM);
+                break;
+            case GLFW_KEY_KP_ADD:
+                state.cameraTarget.zoom = CLAMP(state.cameraTarget.zoom + 5.f, .1, MAX_ZOOM);
+                break;
+            case GLFW_KEY_KP_MULTIPLY:
+                state.cameraTarget.pitch = CLAMP(state.cameraTarget.pitch - .5f / PI, PI + HALF_PI, TWO_PI);
+                break;
+            case GLFW_KEY_KP_DIVIDE:
+                state.cameraTarget.pitch = CLAMP(state.cameraTarget.pitch + .5f / PI, PI + HALF_PI, TWO_PI);
+                break;
+                
+            case GLFW_KEY_LEFT:
+            case GLFW_KEY_A:
+                ClampCursor(-1, 0);
+                break;
+            case GLFW_KEY_RIGHT:
+            case GLFW_KEY_D:
+                ClampCursor(1, 0);
+                break;
+            case GLFW_KEY_UP:
+            case GLFW_KEY_W:
+                ClampCursor(0, -1);
+                break;
+            case GLFW_KEY_DOWN:
+            case GLFW_KEY_S:
+                ClampCursor(0, 1);
+                break;
+        }
     }
 }
 
