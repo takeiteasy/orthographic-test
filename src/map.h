@@ -20,10 +20,6 @@ typedef struct {
 } Quad;
 
 typedef struct {
-    Vec3f points[8];
-} Cube;
-
-typedef struct {
     Vec3f position;
     float angle;
     float pitch;
@@ -31,6 +27,10 @@ typedef struct {
 } Camera;
 
 #define MAX_ZOOM 256.f
+
+typedef struct {
+    Vec3f points[8];
+} Cube;
 
 typedef enum {
     FLOOR_FACE   = 0,

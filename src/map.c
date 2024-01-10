@@ -16,47 +16,40 @@ static const int faces[6][4] = {
     [CEILING_FACE] = { 7, 3, 2, 6 }
 };
 
-static void CreateCube(Tile *tile, int vw, int vh, Cube *out, Camera *camera) {
-    Cube unit = (Cube) {
-        .points = {
-            [0] = Vec3New(0.f, 0.f, 0.f),
-            [1] = Vec3New(1.f, 0.f, 0.f),
-            [2] = Vec3New(1.f, -1.f, 0.f),
-            [3] = Vec3New(0.f, -1.f, 0.f),
-            [4] = Vec3New(0.f, 0.f, 1.f),
-            [5] = Vec3New(1.f, 0.f, 1.f),
-            [6] = Vec3New(1.f, -1.f, 1.f),
-            [7] = Vec3New(0.f, -1.f, 1.f)
-        }
-    };
-    
+static Cube unit = (Cube) {
+    .points = {
+        [0] = Vec3New(0.f, 0.f, 0.f),
+        [1] = Vec3New(1.f, 0.f, 0.f),
+        [2] = Vec3New(1.f, -1.f, 0.f),
+        [3] = Vec3New(0.f, -1.f, 0.f),
+        [4] = Vec3New(0.f, 0.f, 1.f),
+        [5] = Vec3New(1.f, 0.f, 1.f),
+        [6] = Vec3New(1.f, -1.f, 1.f),
+        [7] = Vec3New(0.f, -1.f, 1.f)
+    }
+};
+
+static void CreateCube(int tx, int ty, int vw, int vh, Camera *camera, Vec3f *out) {
     for (int i = 0; i < 8; i++)
-        unit.points[i] += Vec3New(tile->x - camera->position.x,
-                                  0.f,
-                                  tile->y - camera->position.y);
+        out[i] = unit.points[i] + Vec3New(tx - camera->position.x, 0.f, ty - camera->position.y);
     for (int i = 0; i < 8; i++)
-        unit.points[i] *= camera->zoom;
-    
-    Cube rotation;
+        out[i] *= camera->zoom;
     float sa = sinf(camera->angle);
     float ca = cosf(camera->angle);
     for (int i = 0; i < 8; i++)
-        rotation.points[i] = Vec3New(unit.points[i].x * ca + unit.points[i].z * sa,
-                                     unit.points[i].y,
-                                     unit.points[i].x * -sa + unit.points[i].z * ca);
-    
-    Cube world;
+        out[i] = Vec3New(out[i].x * ca + out[i].z * sa,
+                         out[i].y,
+                         out[i].x * -sa + out[i].z * ca);
     float sp = sinf(camera->pitch);
     float cp = cosf(camera->pitch);
     for (int i = 0; i < 8; i++)
-        world.points[i] = Vec3New(rotation.points[i].x,
-                                  rotation.points[i].y * cp - rotation.points[i].z * sp,
-                                  rotation.points[i].y * sp + rotation.points[i].z * cp);
-    
+        out[i] = Vec3New(out[i].x,
+                         out[i].y * cp - out[i].z * sp,
+                         out[i].y * sp + out[i].z * cp);
     for (int i = 0; i < 8; i++)
-        out->points[i] = Vec3New(world.points[i].x + (float)vw * .5f,
-                                 world.points[i].y + (float)vh * .5f,
-                                 world.points[i].z);
+        out[i] = Vec3New(out[i].x + (float)vw * .5f,
+                         out[i].y + (float)vh * .5f,
+                         out[i].z);
 }
 
 static Quad MakeQuad(Cube *cube, int a, int b, int c, int d) {
@@ -89,7 +82,7 @@ do {                                                                            
 
 static void GetCubeFaces(Tile *tile, int vw, int vh, Camera *camera, int visible[6], Face *out, int *n) {
     Cube cube;
-    CreateCube(tile, vw, vh, &cube, camera);
+    CreateCube(tile->x, tile->y, vw, vh, camera, cube.points);
     if (tile->solid) {
         for (int i = 1; i < 6; i++)
             MAKE_FACE(i);
@@ -132,7 +125,7 @@ void InitMap(Map *map, Texture *spritesheet, int w, int h) {
     map->tiles = malloc(sizeof(Tile) * w * h);
     for (int x = 0; x < w; x++)
         for (int y = 0; y < h; y++)
-            map->tiles[y * w + x] = DefaultTile(x, y, 1);
+            map->tiles[y * w + x] = DefaultTile(x, y, 0);
 }
 
 void DestroyMap(Map *map) {
@@ -144,7 +137,7 @@ void RenderMap(Map *map, int vw, int vh, Camera *camera, Vec2i cursor) {
     int visible[6];
     memset(visible, 0, sizeof(int) * 6);
     Cube cull;
-    CreateCube(&map->tiles[0], vw, vh, &cull, camera);
+    CreateCube(0, 0, vw, vh, camera, cull.points);
     for (int i = 0; i < 6; i++)
         visible[i] = CheckNormal(&cull, faces[i][0], faces[i][1], faces[i][2]);
     int inc = 0;
