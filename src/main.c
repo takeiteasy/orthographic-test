@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#define EZ_IMPLEMENTATION
 #include "common.h"
 #include "map.h"
 #include "debug.h"
