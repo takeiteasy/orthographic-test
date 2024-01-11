@@ -45,6 +45,7 @@ typedef struct {
 
 void InitMap(Map *map, Texture *spritesheet, int w, int h);
 void DestroyMap(Map *map);
+void ProjectToMap(int tx, int ty, int vw, int vh, Camera *camera, Vec3f *in, Vec3f *out, size_t length);
 void RenderMap(Map *map,  int vw, int vh, Camera *camera, Vec2i cursor);
 
 #endif /* map_h */

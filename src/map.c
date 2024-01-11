@@ -16,7 +16,7 @@ static const int faces[6][4] = {
     [CEILING_FACE] = { 7, 3, 2, 6 }
 };
 
-static Cube unit = (Cube) {
+static Cube CUBE_POINTS = (Cube) {
     .points = {
         [0] = Vec3New(0.f, 0.f, 0.f),
         [1] = Vec3New(1.f, 0.f, 0.f),
@@ -29,27 +29,31 @@ static Cube unit = (Cube) {
     }
 };
 
-static void CreateCube(int tx, int ty, int vw, int vh, Camera *camera, Vec3f *out) {
-    for (int i = 0; i < 8; i++)
-        out[i] = unit.points[i] + Vec3New(tx - camera->position.x, 0.f, ty - camera->position.y);
+void ProjectToMap(int tx, int ty, int vw, int vh, Camera *camera, Vec3f *in, Vec3f *out, size_t length) {
+    for (int i = 0; i < length; i++)
+        out[i] = in[i] + Vec3New(tx - camera->position.x, 0.f, ty - camera->position.y);
     for (int i = 0; i < 8; i++)
         out[i] *= camera->zoom;
     float sa = sinf(camera->angle);
     float ca = cosf(camera->angle);
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < length; i++)
         out[i] = Vec3New(out[i].x * ca + out[i].z * sa,
                          out[i].y,
                          out[i].x * -sa + out[i].z * ca);
     float sp = sinf(camera->pitch);
     float cp = cosf(camera->pitch);
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < length; i++)
         out[i] = Vec3New(out[i].x,
                          out[i].y * cp - out[i].z * sp,
                          out[i].y * sp + out[i].z * cp);
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < length; i++)
         out[i] = Vec3New(out[i].x + (float)vw * .5f,
                          out[i].y + (float)vh * .5f,
                          out[i].z);
+}
+
+static void CreateCube(int tx, int ty, int vw, int vh, Camera *camera, Vec3f *out) {
+    ProjectToMap(tx, ty, vw, vh, camera, CUBE_POINTS.points, out, 8);
 }
 
 static Quad MakeQuad(Cube *cube, int a, int b, int c, int d) {

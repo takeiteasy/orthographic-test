@@ -41,8 +41,8 @@ static void RenderMesh(Mesh *mesh, int tx, int ty, Camera *camera) {
         glBindTexture(GL_TEXTURE_2D, mesh->texture->id);
     } else
         glDisable(GL_TEXTURE_2D);
-    
     glEnable(GL_DEPTH_TEST);
+    
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
@@ -50,14 +50,14 @@ static void RenderMesh(Mesh *mesh, int tx, int ty, Camera *camera) {
     Vec3f scale = Vec3New(.002f, .002f, .002f);
     glScalef(scale.x * camera->zoom, scale.y * camera->zoom, scale.z * camera->zoom);
     
+    Vec3f translate = Vec3New(tx, ty, 0.f) * .5f + camera->position * scale * camera->zoom;
+    glTranslatef(-translate.x, translate.y, translate.z);
+    
     Vec2f rotation = Vec2New(45.f, 0.f);
     Vec2f adjustment = Vec2New(REMAP(-camera->pitch, PI + HALF_PI, TWO_PI, 0.f, 360.f / 8.f),
                                TO_DEGREES(camera->angle)) - rotation;
     glRotatef(adjustment.x, 1.0, 0.0, 0.0); // Rotate around the x-axis
     glRotatef(adjustment.y, 0.0, 1.0, 0.0); // Rotate around the y-axis
-    
-    Vec3f translate = camera->position + Vec3New(.75f, 1.f, .75f) * Vec3New(tx + 1, 1.f, ty + 1);
-    glTranslatef(translate.x, translate.y, translate.z);
  
     glBegin(GL_TRIANGLES);
     size_t sz = mesh->sizeOfVertices;
